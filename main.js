@@ -587,16 +587,10 @@ function getResultPDF() {
 
 // fetches response sheet through proxy
 async function fetchResponseSheet() {
-    url = fileURLElement.value;
-    if (url.indexOf("http://") !== -1) {
-        urlErrorElement.style.display = "block";
-        urlErrorElement.innerText = "Invalid url. Url must be https, not http";
-        return false;
-    }
-async function fetchResponseSheet() {
     let url = fileURLElement.value;
 
-    if (url.indexOf("http://") !== -1) {
+    // Validate URL
+    if (url.startsWith("http://")) {
         urlErrorElement.style.display = "block";
         urlErrorElement.innerText = "Invalid URL. URL must be HTTPS, not HTTP.";
         return false;
@@ -622,14 +616,15 @@ async function fetchResponseSheet() {
     } catch (err) {
         urlErrorElement.style.display = "block";
         urlErrorElement.innerText = "Invalid URL";
-        console.log("Invalid URL", href);
+        console.error("Invalid URL:", err);
         return false;
     }
 
     let responsecontent = localStorage.getItem(href);
     if (responsecontent === null) {
-        // Using a specific proxy (replace with your proxy URL)
-        let proxy = "https://jeemarkscalculator.vercel.app";
+        // Use your new proxy
+        let proxy = "https://croxyproxy-3pr.pages.dev";
+        
         try {
             document.getElementById("loader").style.display = "block";
             let response = await fetch(`${proxy}/?url=${encodeURIComponent(href)}`, {
@@ -642,6 +637,27 @@ async function fetchResponseSheet() {
             if (!response.ok) {
                 throw new Error("Network error");
             }
+
+            responsecontent = await response.text();
+            document.getElementById("loader").style.display = "none";
+
+            if (responsecontent.includes("<html>")) {
+                localStorage.setItem(href, responsecontent);
+                fetchedFromUrl = true;
+            }
+        } catch (error) {
+            console.error("Fetch error:", error);
+            document.getElementById("loader").style.display = "none";
+            urlErrorElement.style.display = "block";
+            urlErrorElement.innerText = `Some Error Occurred: ${error}. Check console.`;
+            return false;
+        }
+    } else {
+        fetchedFromUrl = true;
+    }
+
+    return responsecontent;
+}
 
             responsecontent = await response.text();
             document.getElementById("loader").style.display = "none";
