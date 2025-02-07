@@ -593,55 +593,59 @@ async function fetchResponseSheet() {
         urlErrorElement.innerText = "Invalid url. Url must be https, not http";
         return false;
     }
+async function fetchResponseSheet() {
+    let url = fileURLElement.value;
 
-    // will only send the request if url is of cdn3.digialm.com and ends with .html to prevent fetching of other websites using the proxy.
-    if (url.indexOf("cdn3.digialm.com") === -1) {
+    if (url.indexOf("http://") !== -1) {
         urlErrorElement.style.display = "block";
-        urlErrorElement.innerText = "Invalid url. Url can only be of cdn3.digialm.com";
-        return false;
-    }
-    if (url.indexOf(".html") === -1) {
-        urlErrorElement.style.display = "block";
-        urlErrorElement.innerText = "Invalid url. The url doesn't contain .html";
+        urlErrorElement.innerText = "Invalid URL. URL must be HTTPS, not HTTP.";
         return false;
     }
 
-    //validating the url
-    href = null;
+    if (!url.includes("cdn3.digialm.com")) {
+        urlErrorElement.style.display = "block";
+        urlErrorElement.innerText = "Invalid URL. URL can only be from cdn3.digialm.com.";
+        return false;
+    }
+
+    if (!url.endsWith(".html")) {
+        urlErrorElement.style.display = "block";
+        urlErrorElement.innerText = "Invalid URL. The URL must end with .html.";
+        return false;
+    }
+
+    let href;
     try {
-        urlObject = new URL(url);
+        let urlObject = new URL(url);
         href = urlObject.href;
         urlErrorElement.style.display = "none";
     } catch (err) {
         urlErrorElement.style.display = "block";
-        urlErrorElement.innerText = "Invalid url";
-        console.log("invalid url", console.log(href))
+        urlErrorElement.innerText = "Invalid URL";
+        console.log("Invalid URL", href);
         return false;
     }
 
-    responsecontent = localStorage.getItem(href)
+    let responsecontent = localStorage.getItem(href);
     if (responsecontent === null) {
-
-        // get response sheet using a random proxy
-        proxy = proxies[Math.floor(Math.random() * proxies.length)];
+        // Using a specific proxy (replace with your proxy URL)
+        let proxy = "https://jeemarkscalculator.vercel.app";
         try {
             document.getElementById("loader").style.display = "block";
-            response = await fetch(`${proxy}`, {
+            let response = await fetch(`${proxy}/?url=${encodeURIComponent(href)}`, {
+                method: "GET",
                 headers: {
-                    "corsproxy": "corsproxy",
-                    "urltofetch": href
+                    "corsproxy": "corsproxy"
                 }
             });
+
             if (!response.ok) {
-                throw new Error('Network error');
-                document.getElementById("loader").style.display = "none";
-                urlErrorElement.stle.display = "block";
-                urlErrorElement.innerText = "Network Error";
-                return false;
+                throw new Error("Network error");
             }
-            // console.log(response);
+
             responsecontent = await response.text();
             document.getElementById("loader").style.display = "none";
+
             if (responsecontent.includes("<html>")) {
                 fetchedFromUrl = true;
                 localStorage.setItem(href, responsecontent);
@@ -650,12 +654,13 @@ async function fetchResponseSheet() {
             console.error(error);
             document.getElementById("loader").style.display = "none";
             urlErrorElement.style.display = "block";
-            urlErrorElement.innerText = `Some Error Occured, ${error} Check console`;
+            urlErrorElement.innerText = `Some error occurred: ${error}. Check the console.`;
             return false;
         }
     } else {
         fetchedFromUrl = true;
     }
+
     return responsecontent;
 }
 
