@@ -623,7 +623,7 @@ async function fetchResponseSheet() {
     let responsecontent = localStorage.getItem(href);
     if (responsecontent === null) {
         // Use your new proxy
-        let proxy = "https://croxyproxy-3pr.pages.dev";
+        let proxy = "https://cors-proxy.novadrone16.workers.dev";
         
         try {
             document.getElementById("loader").style.display = "block";
